@@ -8,7 +8,8 @@ class Locators:
     CART_LINK = "#cartur"
 
     # Home / product list
-    PRODUCT_LINK_BY_NAME = "text={name}"
+    # Use a link selector to target product anchors by visible text.
+    PRODUCT_LINK_BY_NAME = "a:has-text('{name}')"
 
     # Product page
     ADD_TO_CART_BUTTON = "a:has-text('Add to cart')"
