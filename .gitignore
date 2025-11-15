@@ -49,6 +49,8 @@ coverage.xml
 .venv/
 allure-results/
 allure-report/
+allure-2.35.1/
+allure-*.zip
 
 # Virtual environments
 venv/
