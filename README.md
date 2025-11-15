@@ -1,6 +1,10 @@
 # python_playwright_pytest
 
-Minimal Playwright + pytest setup (no FastAPI/uvicorn).
+Minimal Playwright + pytest setup with Page Object Model, Allure reports, uv package manager, and GitHub Actions CI/CD.
+
+**Repository:** https://github.com/ShashankLokare/python_playwright_pytest
+
+**GitHub Actions Status:** Tests run automatically on every push to `main`, `develop`, or `master` branches.
 
 Prerequisites (Windows PowerShell):
 
