@@ -1,10 +1,4 @@
-$env:Path += ";C:\Program Files\Git\cmd"
-cd 'c:\Users\HP\python_git\python_playwright_pytest'
-
-# Replace YOUR_USERNAME with your GitHub username
-git remote add origin https://github.com/YOUR_USERNAME/python_playwright_pytest.git
-git branch -M main
-git push -u origin main# GitHub Actions workflow: Run tests and upload Allure reports
+# GitHub Actions workflow: Run tests and upload Allure reports
 name: Test & Allure Report
 
 on:
@@ -78,6 +72,13 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const artifactName = 'allure-report-html';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `📊 **Allure Test Report**\n\nDownload the report artifact: **${artifactName}**\n\nThen open \`index.html\` in a browser to view the detailed test report.`
+            });
             const artifactName = 'allure-report-html';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
