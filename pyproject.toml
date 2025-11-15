@@ -1,0 +1,11 @@
+[project]
+name = "python_playwright_pytest"
+version = "0.0.1"
+description = "Minimal Playwright + pytest example project"
+readme = "README.md"
+authors = [ { name = "HP" } ]
+requires-python = ">=3.8"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

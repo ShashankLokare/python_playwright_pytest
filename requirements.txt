@@ -1,0 +1,5 @@
+playwright
+pytest
+pytest-playwright
+allure-pytest
+uv
