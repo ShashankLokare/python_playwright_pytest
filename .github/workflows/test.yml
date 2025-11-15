@@ -42,7 +42,7 @@ jobs:
 
       - name: Run tests with Allure reporting
         run: |
-          python -m pytest tests/ -q --alluredir=allure-results
+          python -m pytest tests/ -v --alluredir=allure-results --tb=short
         continue-on-error: true
 
       - name: Generate Allure HTML report
