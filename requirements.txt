@@ -3,3 +3,4 @@ pytest
 pytest-playwright
 allure-pytest
 uv
+allure-commandline

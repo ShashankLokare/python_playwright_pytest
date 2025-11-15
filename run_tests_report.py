@@ -5,11 +5,12 @@ Usage:
   python run_tests_report.py              # Run tests and generate Allure results
   python run_tests_report.py --headless   # Run tests in headless mode
   python run_tests_report.py --view       # View existing report (doesn't run tests)
+  python run_tests_report.py --serve      # Serve live report with Allure CLI
 
-Note: To generate HTML report from Allure JSON results, install Allure CLI:
-  https://docs.qameta.io/allure/
-Then run: allure generate allure-results -o allure-report --clean
-Or use: allure serve allure-results
+Local Allure Setup:
+  python setup_allure.py                  # Download and install Allure 2.35.1 locally
+
+Or install globally from: https://docs.qameta.io/allure/
 """
 import argparse
 import subprocess
@@ -20,12 +21,24 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent
 ALLURE_RESULTS_DIR = PROJECT_ROOT / "allure-results"
 ALLURE_REPORT_DIR = PROJECT_ROOT / "allure-report"
+ALLURE_CLI = PROJECT_ROOT / "allure-2.35.1" / "bin" / ("allure.bat" if sys.platform == "win32" else "allure")
+
+
+def find_allure_command():
+    """Find allure command: local first, then system PATH."""
+    if ALLURE_CLI.exists():
+        return str(ALLURE_CLI)
+    try:
+        subprocess.run(["allure", "--version"], capture_output=True, check=True)
+        return "allure"
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
 
 
 def run_tests(headless: bool = False) -> int:
     """Run pytest and generate Allure results."""
     print("Running pytest with Allure report generation...")
-    cmd = [sys.executable, "-m", "pytest", "tests/", "-q", "--alluredir=allure-results"]
+    cmd = [sys.executable, "-m", "pytest", "tests/", "-v", "--alluredir=allure-results", "--tb=short"]
     
     # Override headed mode from pytest.ini if headless requested
     if headless:
@@ -37,7 +50,7 @@ def run_tests(headless: bool = False) -> int:
     return result.returncode
 
 
-def generate_html_report() -> bool:
+def generate_html_report(allure_cmd: str) -> bool:
     """
     Generate offline HTML Allure report.
     Requires Allure CLI: https://docs.qameta.io/allure/
@@ -46,7 +59,7 @@ def generate_html_report() -> bool:
     try:
         # Try allure command
         result = subprocess.run(
-            ["allure", "generate", str(ALLURE_RESULTS_DIR), "-o", str(ALLURE_REPORT_DIR), "--clean"],
+            [allure_cmd, "generate", str(ALLURE_RESULTS_DIR), "-o", str(ALLURE_REPORT_DIR), "--clean"],
             check=True,
             cwd=PROJECT_ROOT,
             capture_output=True,
@@ -55,27 +68,29 @@ def generate_html_report() -> bool:
         print(f"✓ Report generated at: {ALLURE_REPORT_DIR}")
         return True
     except FileNotFoundError:
-        print("\n⚠ Allure CLI not found (install from: https://docs.qameta.io/allure/)")
+        print("\n⚠ Allure CLI not found")
+        print("  To install locally: python setup_allure.py")
+        print("  Or install globally: https://docs.qameta.io/allure/")
         print("\nGenerated Allure JSON results in: allure-results/")
-        print("To view report, install Allure and run:")
-        print("  allure serve allure-results")
         return False
     except subprocess.CalledProcessError as e:
         print(f"ERROR: Failed to generate report: {e.stderr}")
         return False
 
 
-def serve_report() -> bool:
+def serve_report(allure_cmd: str) -> bool:
     """Serve Allure report via Allure CLI."""
     print("\nServing Allure report...")
     try:
         subprocess.run(
-            ["allure", "serve", str(ALLURE_RESULTS_DIR)],
+            [allure_cmd, "serve", str(ALLURE_RESULTS_DIR)],
             cwd=PROJECT_ROOT,
         )
         return True
     except FileNotFoundError:
-        print("ERROR: 'allure' CLI not found. Install from: https://docs.qameta.io/allure/")
+        print("ERROR: 'allure' CLI not found.")
+        print("  To install locally: python setup_allure.py")
+        print("  Or install globally: https://docs.qameta.io/allure/")
         return False
 
 
@@ -93,7 +108,7 @@ def open_report() -> None:
         print(f"\nReport HTML file not found: {report_index}")
 
 
-def view_existing_report() -> None:
+def view_existing_report(allure_cmd: str = None) -> None:
     """View the existing Allure report if it exists."""
     report_index = ALLURE_REPORT_DIR / "index.html"
     if report_index.exists():
@@ -113,6 +128,9 @@ Examples:
   python run_tests_report.py --headless   # Run tests headless
   python run_tests_report.py --view       # View existing report
   python run_tests_report.py --serve      # Serve with Allure CLI (requires 'allure' installed)
+  
+Setup:
+  python setup_allure.py                  # Install Allure CLI locally (one-time)
         """,
     )
     parser.add_argument(
@@ -132,9 +150,16 @@ Examples:
     )
     args = parser.parse_args()
 
+    # Find allure command
+    allure_cmd = find_allure_command()
+    if not allure_cmd:
+        print("⚠ Allure CLI not found.")
+        print("  To set up locally (one-time): python setup_allure.py")
+        print("  Or install globally: https://docs.qameta.io/allure/")
+
     # View existing report
     if args.view:
-        view_existing_report()
+        view_existing_report(allure_cmd)
         return 0
 
     # Run tests
@@ -142,10 +167,18 @@ Examples:
     
     # Serve or generate report
     if args.serve:
-        serve_report()
+        if allure_cmd:
+            serve_report(allure_cmd)
+        else:
+            print("ERROR: Cannot serve without Allure CLI. Run: python setup_allure.py")
+            return 1
     else:
-        if generate_html_report():
-            open_report()
+        if allure_cmd:
+            if generate_html_report(allure_cmd):
+                open_report()
+        else:
+            print("\nTo generate HTML reports, run: python setup_allure.py")
+            print("Allure JSON results saved in: allure-results/")
 
     return test_result
 
