@@ -1,4 +1,10 @@
-# GitHub Actions workflow: Run tests and upload Allure reports
+$env:Path += ";C:\Program Files\Git\cmd"
+cd 'c:\Users\HP\python_git\python_playwright_pytest'
+
+# Replace YOUR_USERNAME with your GitHub username
+git remote add origin https://github.com/YOUR_USERNAME/python_playwright_pytest.git
+git branch -M main
+git push -u origin main# GitHub Actions workflow: Run tests and upload Allure reports
 name: Test & Allure Report
 
 on:
@@ -52,7 +58,7 @@ jobs:
 
       - name: Upload Allure results (JSON)
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: allure-results/
@@ -60,7 +66,7 @@ jobs:
 
       - name: Upload Allure report (HTML)
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: allure-report-html
           path: allure-report/
