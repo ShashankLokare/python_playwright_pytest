@@ -1,4 +1,4 @@
-# GitHub Actions workflow: Run tests and publish Allure reports to GitHub Pages
+# GitHub Actions workflow: Run tests and generate Allure reports
 name: Test & Allure Report
 
 on:
@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
   pull-requests: write
 
 jobs:
@@ -70,70 +68,15 @@ jobs:
           path: allure-report/
           retention-days: 30
 
-      - name: Comment PR with report link
+      - name: Comment PR with report download link
         if: github.event_name == 'pull_request' && always()
         uses: actions/github-script@v6
         with:
           script: |
-            const artifactName = 'allure-report-html';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `📊 **Allure Test Report**\n\nDownload the report artifact: **${artifactName}**\n\nThen open \`index.html\` in a browser to view the detailed test report.`
-            });
-
-  deploy-report:
-    name: Deploy Allure Report to GitHub Pages
-    runs-on: ubuntu-latest
-    needs: test
-    if: success()
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download Allure report artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: allure-report-html
-          path: allure-report
-        continue-on-error: true
-
-      - name: Check if report exists
-        run: |
-          if [ ! -d "allure-report" ] || [ ! -f "allure-report/index.html" ]; then
-            echo "❌ Allure report not found - skipping Pages deployment"
-            exit 1
-          else
-            echo "✅ Allure report found - proceeding with deployment"
-          fi
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact to Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: 'allure-report'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      - name: Comment PR with Pages link
-        if: github.event_name == 'pull_request' && success()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const pagesUrl = `https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/`;
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🚀 **Live Allure Report**: [View Report](${pagesUrl})\n\nThe report is also available as a downloadable artifact named **allure-report-html**.`
+              body: `📊 **Allure Test Report Generated**\n\n✅ Download the report: **allure-report-html** artifact\n\n📋 Instructions:\n1. Go to the **Actions** tab → latest workflow run\n2. Scroll to **Artifacts** section\n3. Download **allure-report-html**\n4. Extract and open \`index.html\` in your browser`
             });
 
